@@ -168,10 +168,11 @@ public:
 	typedef bool (CUtlBuffer::*UtlBufferOverflowFunc_t)( int nSize );
 
 	// Constructors for growable + external buffers for serialization/unserialization
-	DLL_CLASS_IMPORT CUtlBuffer( int growSize = 0, int initSize = 0, int nFlags = 0 );
-	DLL_CLASS_IMPORT CUtlBuffer( const void* pBuffer, int size, int nFlags = 0 );
+	DLL_CLASS_IMPORT CUtlBuffer( int growSize = 0, int initSize = 0, CUtlBuffer::BufferFlags_t bufferFlag = CUtlBuffer::BufferFlags_t::TEXT_BUFFER );
+	DLL_CLASS_IMPORT CUtlBuffer( const void* pBuffer, int size, CUtlBuffer::BufferFlags_t bufferFlag );
+
 	// This one isn't actually defined so that we catch contructors that are trying to pass a bool in as the third param.
-	CUtlBuffer( const void *pBuffer, int size, bool crap );
+	//CUtlBuffer( const void *pBuffer, int size, void& crap );
 
 	unsigned char	GetFlags() const;
 

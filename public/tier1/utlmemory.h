@@ -645,9 +645,9 @@ inline bool CUtlMemory<T,I>::IsIdxValid( I i ) const
 	return ( x >= 0 ) && ( x < m_nAllocationCount );
 }
 
-PLATFORM_INTERFACE int		UtlMemory_CalcNewAllocationCount( int nAllocationCount, int nGrowSize, int nNewSize, int nBytesItem );
-PLATFORM_INTERFACE void*	UtlMemory_Alloc( void* pMem, bool bRealloc, int nNewSize, int nOldSize );
-PLATFORM_INTERFACE void		UtlMemory_FailedAllocation( int nTotalElements, int nNewElements );
+PLATFORM_INTERFACE int		UtlVectorMemory_CalcNewAllocationCount( int nAllocationCount, int nGrowSize, int nNewSize, int nBytesItem );
+PLATFORM_INTERFACE void*	UtlVectorMemory_Alloc( void* pMem, bool bRealloc, int nNewSize, int nOldSize );
+PLATFORM_INTERFACE void		UtlVectorMemory_FailedAllocation( int nTotalElements, int nNewElements );
 
 //-----------------------------------------------------------------------------
 // Grows the memory
@@ -665,7 +665,7 @@ void CUtlMemory<T,I>::Grow( int num )
 	}
 
 	if ( ( ( int64 )m_nAllocationCount + num ) > INT_MAX )
-		UtlMemory_FailedAllocation( m_nAllocationCount, num );
+		UtlVectorMemory_FailedAllocation( m_nAllocationCount, num );
 
 	// Make sure we have at least numallocated + num allocations.
 	// Use the grow rules specified for this memory (in m_nGrowSize)
@@ -673,7 +673,7 @@ void CUtlMemory<T,I>::Grow( int num )
 
 	UTLMEMORY_TRACK_FREE();
 
-	int nNewAllocationCount = UtlMemory_CalcNewAllocationCount( m_nAllocationCount, m_nGrowSize & ~(EXTERNAL_CONST_BUFFER_MARKER | EXTERNAL_BUFFER_MARKER), nAllocationRequested, sizeof(T) );
+	int nNewAllocationCount = UtlVectorMemory_CalcNewAllocationCount( m_nAllocationCount, m_nGrowSize & ~(EXTERNAL_CONST_BUFFER_MARKER | EXTERNAL_BUFFER_MARKER), nAllocationRequested, sizeof(T) );
 
 	// if m_nAllocationRequested wraps index type I, recalculate
 	if ( ( int )( I )nNewAllocationCount < nAllocationRequested )
@@ -698,7 +698,7 @@ void CUtlMemory<T,I>::Grow( int num )
 	}
 
 	MEM_ALLOC_CREDIT_CLASS();
-	m_pMemory = (T*)UtlMemory_Alloc( m_pMemory, !IsExternallyAllocated(), nNewAllocationCount * sizeof(T), m_nAllocationCount * sizeof(T) );
+	m_pMemory = (T*)UtlVectorMemory_Alloc( m_pMemory, !IsExternallyAllocated(), nNewAllocationCount * sizeof(T), m_nAllocationCount * sizeof(T) );
 	Assert( m_pMemory );
 
 	if ( IsExternallyAllocated() )
@@ -729,7 +729,7 @@ inline void CUtlMemory<T,I>::EnsureCapacity( int num )
 	UTLMEMORY_TRACK_FREE();
 
 	MEM_ALLOC_CREDIT_CLASS();
-	m_pMemory = (T*)UtlMemory_Alloc( m_pMemory, !IsExternallyAllocated(), num * sizeof(T), m_nAllocationCount * sizeof(T) );
+	m_pMemory = (T*)UtlVectorMemory_Alloc( m_pMemory, !IsExternallyAllocated(), num * sizeof(T), m_nAllocationCount * sizeof(T) );
 
 	if ( IsExternallyAllocated() )
 		m_nGrowSize &= ~(EXTERNAL_CONST_BUFFER_MARKER | EXTERNAL_BUFFER_MARKER);
@@ -800,7 +800,7 @@ void CUtlMemory<T,I>::Purge( int numElements )
 	UTLMEMORY_TRACK_FREE();
 
 	MEM_ALLOC_CREDIT_CLASS();
-	m_pMemory = (T*)UtlMemory_Alloc( m_pMemory, !IsExternallyAllocated(), numElements * sizeof(T), m_nAllocationCount * sizeof(T) );
+	m_pMemory = (T*)UtlVectorMemory_Alloc( m_pMemory, !IsExternallyAllocated(), numElements * sizeof(T), m_nAllocationCount * sizeof(T) );
 
 	if ( IsExternallyAllocated() )
 		m_nGrowSize &= ~(EXTERNAL_CONST_BUFFER_MARKER | EXTERNAL_BUFFER_MARKER);
@@ -956,7 +956,7 @@ void CUtlMemoryAligned<T, nAlignment>::Grow( int num )
 	// Use the grow rules specified for this memory (in m_nGrowSize)
 	int nAllocationRequested = CUtlMemory<T>::m_nAllocationCount + num;
 
-	CUtlMemory<T>::m_nAllocationCount = UtlMemory_CalcNewAllocationCount( CUtlMemory<T>::m_nAllocationCount, CUtlMemory<T>::m_nGrowSize, nAllocationRequested, sizeof(T) );
+	CUtlMemory<T>::m_nAllocationCount = UtlVectorMemory_CalcNewAllocationCount( CUtlMemory<T>::m_nAllocationCount, CUtlMemory<T>::m_nGrowSize, nAllocationRequested, sizeof(T) );
 
 	UTLMEMORY_TRACK_ALLOC();
 
@@ -1187,7 +1187,7 @@ void CUtlMemory_RawAllocator<T>::Grow( int num )
 	
 	if ( ( INT_MAX - m_nAllocationCount ) < num )
 	{
-		Plat_FatalErrorFunc( "%s: Invalid grow amount %d\n", __FUNCTION__, num );
+		Plat_FatalError( "%s: Invalid grow amount %d\n", __FUNCTION__, num );
 		DebuggerBreak();
 	}
 	
@@ -1205,7 +1205,7 @@ inline void CUtlMemory_RawAllocator<T>::EnsureCapacity( int num )
 	
 	if ( ( size_t )num > ( SIZE_MAX / sizeof(T) ) )
 	{
-		Plat_FatalErrorFunc( "%s: Invalid capacity %u\n", __FUNCTION__, num );
+		Plat_FatalError( "%s: Invalid capacity %u\n", __FUNCTION__, num );
 		DebuggerBreak();
 	}
 	
@@ -1308,7 +1308,7 @@ void CUtlMemory_RawAllocator<T>::SetRawAllocatorType( RawAllocatorType_t eAlloca
 	{
 		if ( eAllocatorType != RawAllocator_Standard )
 		{
-			Plat_FatalErrorFunc( "%s: Unsupported raw allocator type %u\n", __FUNCTION__, eAllocatorType );
+			Plat_FatalError( "%s: Unsupported raw allocator type %u\n", __FUNCTION__, eAllocatorType );
 			DebuggerBreak();
 		}
 		

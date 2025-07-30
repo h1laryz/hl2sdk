@@ -51,7 +51,7 @@ public:
 		*cmd.m_Command = g_pCVar->RegisterConCommand( cmd.m_Info, s_nCVarFlag );
 		if(!cmd.m_Command->IsValidRef())
 		{
-			Plat_FatalErrorFunc( "RegisterConCommand: Unknown error registering con command \"%s\"!\n", cmd.m_Info.m_pszName );
+			Plat_FatalError( "RegisterConCommand: Unknown error registering con command \"%s\"!\n", cmd.m_Info.m_pszName );
 			DebuggerBreakIfDebugging();
 		}
 		else if(s_ConCommandRegCB)
@@ -149,7 +149,7 @@ public:
 		g_pCVar->RegisterConVar( cvar.m_Info, s_nCVarFlag, cvar.m_pConVar, cvar.m_pConVarData );
 		if(!cvar.m_pConVar->IsValidRef())
 		{
-			Plat_FatalErrorFunc( "RegisterConVar: Unknown error registering convar \"%s\"!\n", cvar.m_Info.m_pszName );
+			Plat_FatalError( "RegisterConVar: Unknown error registering convar \"%s\"!\n", cvar.m_Info.m_pszName );
 			DebuggerBreakIfDebugging();
 		}
 		// Don't let references pass as a newly registered cvar
@@ -372,7 +372,7 @@ bool CCommand::Tokenize( CUtlString pCommand, characterset_t *pBreakSet )
 	memmove( m_ArgSBuffer.Base(), pCommand, nLen + 1 );
 
 	// Parse the current command into the current command buffer
-	CUtlBuffer bufParse( m_ArgSBuffer.Base(), nLen, CUtlBuffer::TEXT_BUFFER | CUtlBuffer::READ_ONLY);
+	CUtlBuffer bufParse( m_ArgSBuffer.Base(), nLen, static_cast<CUtlBuffer::BufferFlags_t>(CUtlBuffer::TEXT_BUFFER | CUtlBuffer::READ_ONLY));
 	int nArgvBufferSize = 0;
 	while ( bufParse.IsValid() )
 	{

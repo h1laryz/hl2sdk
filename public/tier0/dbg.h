@@ -252,7 +252,7 @@ inline void Error( const tchar* pMsg, ... )
 	va_start(params, pMsg);
 	V_vsnprintf(szBuffer, sizeof(szBuffer), pMsg, params);
 	va_end(params);
-	Plat_FatalErrorFunc( "%s", szBuffer );
+	Plat_FatalError( "%s", szBuffer );
 }
 
 // @TODO: these callstack spew functions are currently disabled in the new logging system.  Need to add support for these if desired.
